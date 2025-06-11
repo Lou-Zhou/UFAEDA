@@ -206,11 +206,8 @@ init_kmeans <- avg_ufa_throws |>
   select(-throw_team) |> 
   kmeans(algorithm = "Lloyd", centers = 3, nstart = 1)
 
-<<<<<<< HEAD
-
 
 ## Concluding Thoughts {.smaller}
-=======
 avg_ufa_throws |>
   mutate(
     avg_throw_clusters = as.factor(init_kmeans$cluster)
@@ -225,4 +222,3 @@ avg_ufa_throws |>
 
 
 ## Concluding Thoughts {.smaller}
->>>>>>> 70fb0280d111e87177580ef9b38571c4137aafdd
