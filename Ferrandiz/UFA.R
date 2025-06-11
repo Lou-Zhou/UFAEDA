@@ -5,11 +5,12 @@ ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data
 ufa_throws <- read_csv("https://raw.githubusercontent.com/BradenEberhard/Expected-Throwing-Value/refs/heads/main/data/all_games_1024.csv")
 
 
-
-
-colnames(ufa_throws)
+library(dplyr)
+library(tidyr)
+library(stringr)
 library(ggplot2)
 
+colnames(ufa_throws)
 
 cor(ufa_throws$throw_distance, ufa_throws$turnover, method = 'pearson')
 
@@ -36,26 +37,15 @@ cor(ufa_throws$throw_distance, ufa_throws$turnover, method = 'pearson')
 
 ########Heat Map#########
 ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
-  geom_tile() +scale_fill_gradient(low="white", high="darkblue", name= "Throw Distance")
+  geom_tile() +scale_fill_gradient(low="white", high="blue", name= "Throw Distance")
 ######
-
-
-
-ufa_throws <- ufa_throws %>% mutate(ufa_angle= throw_angle * (180/pi))
-
-ufa_throws %>% ggplot(aes(x = ufa_angle)) +
-  geom_histogram(binwidth = 1, fill = "blue", alpha = 0.9) +
-  coord_polar(start = 0) +
-  theme_minimal() +
-  labs(title = "Throw Angle")
 
 
 
 game_data <- ufa_throws %>% group_by(gameID) %>% mutate(Year= year(gameID)) %>% 
   summarize(total_plays = n(),
             total_turnover = sum(turnover, na.rm = TRUE),
-            passing_plays = sum(throw_distance, na.rm = TRUE))
-
+            total_throw_distance = sum(throw_distance, na.rm = TRUE)) %>% select(everything())
 
 
 
@@ -70,15 +60,16 @@ ggplot(df_long, aes(x = factor(Year), y = Value)) +
   geom_bar(stat = "identity") +
   labs(title = "Ultimate Frisbee Total Throw Distance by Year",
        x = "Year", y = "Throw Distance") +
-  scale_fill_brewer(palette = "Set2") +
+  scale_fill_brewer(palette ="Set3" ) +
   theme_minimal()
 
+install.packages("RColorBrewer")
+library(RColorBrewer)
+display.brewer.all()
 
-library(dplyr)
-library(tidyr)
 
 # Separate gameid into columns
-game_data_clean <- game_data %>%
+game_data_clean <- ufa_throws %>%
   separate(gameID, into = c("year", "month", "day", "team1", "team2"), sep = "-") %>%
   mutate(date = as.Date(paste(year, month, day, sep = "-"))) %>%
   select(date, team1, team2, everything(), -year, -month, -day)
@@ -88,26 +79,18 @@ print(game_data_clean)
 
 
 
-# Convert to long format (one row per team)
-team_long <- team_data_2022 %>%
-  pivot_longer(cols = c(team1, team2), names_to = "team_role", values_to = "team") %>%
-  group_by(team) %>%
-  summarize(total_throw_distance = sum(throw_distance, na.rm = TRUE),.groups = "drop")
-
-
-library(dplyr)
-###########Throw distance by Team################
+###########    Throw distance by Team     ################
 
 team_year_data <- game_data_clean %>%
   mutate(year = format(date, "%Y")) %>%
   pivot_longer(cols = c(team1, team2), names_to = "team_role", values_to = "team") %>%
   filter(!team %in% c("allstar", "game")) %>%  # <- filter out unwanted team names
   group_by(year, team) %>%
-  summarize(total_throw_distance = sum(throw_distance, na.rm = TRUE)
-            , .groups = "drop")
+  summarize(t_total_throw_distance = sum(throw_distance, na.rm = TRUE),
+            t_total_turnovers = sum(turnover, na.rm = TRUE),.groups = "drop")
 
 # Plot
-ggplot(team_year_data, aes(x = reorder(team, -total_throw_distance), y = total_throw_distance, fill = team)) +
+ggplot(team_year_data, aes(x = reorder(team, -t_total_throw_distance), y = t_total_throw_distance, fill = team)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ year, scales = "free_x") +
   labs(title = "Total Throw Distance by Team (2021–2024)",
@@ -116,8 +99,6 @@ ggplot(team_year_data, aes(x = reorder(team, -total_throw_distance), y = total_t
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "none")
 
-
-library(dplyr)
 
 ########total_turnover#########
 team_turnover_data <- game_data_clean %>%
@@ -138,9 +119,69 @@ ggplot(team_turnover_data, aes(x = reorder(team, -total_turnovers), y = total_tu
         legend.position = "none")
 
 
+#############.  Tean Wins per Year #############
+
+wins<- ufa_throws %>%
+  distinct(gameID, home_teamID, away_teamID, home_team_win) %>%          # 1 row per game
+  mutate(
+    year = str_sub(gameID, 1, 4),                                         # Extract year
+    winner = if_else(home_team_win == 1, home_teamID, away_teamID)       # Determine winner
+  ) %>% filter(!home_teamID %in% c("allstars1", "allstars2")) %>% 
+  count(year, winner, name = "wins") %>%                                  # Count wins per team per year
+  rename(teamID = winner)
+
+
+ggplot(wins, aes(x = reorder(teamID, -wins), y = wins, fill = year)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Team Wins per Year", x = "Team", y = "Wins") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 
+#########       Horizontal plot, color by team. #############
+ggplot(wins, aes(x = wins, y = reorder(teamID, wins), fill = teamID)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~year, scales = "free_y") +  # One panel per year
+  labs(title = "Team Wins per Year", x = "Wins", y = "Team") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+#12 games in the regular season
+
+#install.packages("tidytext")
+#library(tidytext)
+
+ggplot(team_wins, aes(x = wins, y = reorder_within(teamID, wins, year), fill = teamID)) +
+  geom_col() +
+  facet_wrap(~year, scales = "free_y") +
+  scale_y_reordered() +
+  labs(title = "Team Wins per Year",
+       x = "Wins", y = "Team") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+#outlaws, legion and cannons disbanded/ceased operations
+
+#havoc 2023
+#mechanix 2024
+#shred, nitro & summitt 2022
+wins<- ufa_throws %>%
+  distinct(gameID, home_teamID, away_teamID, home_team_win) %>%          # 1 row per game
+  mutate( winner = if_else(home_team_win == 1, home_teamID, away_teamID)       # Determine winner
+  ) %>% filter(!home_teamID %in% c("allstars1", "allstars2")) %>% 
+  count(winner, name = "wins") %>%                                  # Count wins per team per year
+  rename(teamID = winner)
 
 
 
+team_year_data <- game_data_clean %>%
+  mutate(year = format(date, "%Y"), winner = if_else(home_team_win == 1, home_teamID, away_teamID) %>%
+  pivot_longer(cols = c(team1, team2), names_to = "team_role", values_to = "team") %>%
+  filter(!team %in% c("allstar", "game")) %>%  # <- filter out unwanted team names
+  count(year, winner, name = "wins") %>% 
+  group_by(year, team) %>%
+  summarize(t_total_throw_distance = sum(throw_distance, na.rm = TRUE),
+            t_total_turnovers = sum(turnover, na.rm = TRUE),.groups = "drop"
+            )
