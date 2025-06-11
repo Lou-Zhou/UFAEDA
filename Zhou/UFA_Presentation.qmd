@@ -1,27 +1,23 @@
+---
+title: "Throw Analysis in the Ultimate Frisbee Association (UFA)"
+editor: visual
+author: Isabella Ferrandiz, Tai Fowler, Lou Zhou
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    css: styles.css
+    footer: Project 2 - Isabella Ferrandiz, Tai Fowler, Lou Zhou
+server: shiny
+---
+```{r imports}
+#| context: setup
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(ggplot2)
-library(shiny)
-library(hexbin)
 ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/ufa_throws.csv")
-field_width = 53 + 1/3
-field_height = 80
-ufa_throws <- ufa_throws |>
-  mutate(receiver_x_flipped = -receiver_x) 
-thrower_data <- ufa_throws |> dplyr::group_by(thrower) |>
-  dplyr::summarise(total = n()) |> dplyr::filter(total > 50)
-allThrowers = head(unique(thrower_data$thrower), 500)
-segment_data = data.frame(
-  x = c( -field_width / 2, field_width / 2, -field_width / 2, -field_width / 2,
-         -field_width / 2, -field_width / 2),
-  xend = c( -field_width / 2, field_width / 2, field_width / 2, field_width / 2,
-            field_width / 2, field_width / 2 ), 
-  y = c(-20, -20, -20, 100, 120, 0),
-  yend = c(120, 120, -20, 100, 120, 0)
-)
-brick_points = data.frame(
-  x = c(0, 0),
-  y = c(20, 50)
-)
 drawEndLocs <- function(successful = "Both", player = "Keep All", distanceBounds = c(0, 100), showContour = TRUE, showPoints = FALSE){
 plot_ufa_throws <- ufa_throws
 title = "End Locations of Passes in UFA League"
@@ -78,7 +74,6 @@ if (showPoints) {
 } 
 plot
 }
-
 getThrwerData <- function(successful, player,distanceBounds = c(0, 100) ) {
   player_data <- ufa_throws
   player_data <- player_data |> 
@@ -92,9 +87,32 @@ getThrwerData <- function(successful, player,distanceBounds = c(0, 100) ) {
   completion = 1 - mean(player_data$turnover)
   paste0("<b>Completion Percentage:</b> ", round(completion, 5), "<br> <b>Number of Throws:</b> ", total)
 }
+field_width = 53 + 1/3
+field_height = 80
+ufa_throws <- ufa_throws |>
+  dplyr::mutate(receiver_x_flipped = -receiver_x) 
+thrower_data <- ufa_throws |> dplyr::group_by(thrower) |>
+  dplyr::summarise(total = n()) |> dplyr::filter(total > 50)
+allThrowers = head(unique(thrower_data$thrower), 500)
+segment_data = data.frame(
+  x = c( -field_width / 2, field_width / 2, -field_width / 2, -field_width / 2,
+         -field_width / 2, -field_width / 2),
+  xend = c( -field_width / 2, field_width / 2, field_width / 2, field_width / 2,
+            field_width / 2, field_width / 2 ), 
+  y = c(-20, -20, -20, 100, 120, 0),
+  yend = c(120, 120, -20, 100, 120, 0)
+)
+brick_points = data.frame(
+  x = c(0, 0),
+  y = c(20, 50)
+)
+```
+## Data Overview
 
-shinyApp(
-  ui = fluidPage(
+## End Location Analysis
+::: {.center style="font-size:40%;"}
+```{r}
+fluidPage(
     titlePanel("UFA Throw End Locations"),
     sidebarLayout(
       sidebarPanel(
@@ -107,16 +125,20 @@ shinyApp(
         sliderInput("distBounds", "Start Distance from End Zone", value = c(0, 100), min = 0, max = 100)
       ),
       mainPanel(
-        fluidRow(
-          column(12, plotOutput("plot")),
-          column(6, htmlOutput("text")),
-          
-      )
+          column(12, plotOutput("plot", height = "500px")),
+          column(6, htmlOutput("text"))
     )
-  )),
-  server = function(input, output) {
-    output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$distBounds, input$showContour, input$showPoints))
+  )
+)
+```
+:::
+```{r}
+#| context: server
+output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$distBounds, input$showContour, input$showPoints))
     output$text <- renderText(getThrwerData(input$successPasses, input$thrower, input$distBounds))
-  })
-  
-#80, 53 1/3
+```
+
+## Test
+```{r}
+plot(1:100, 1:100)
+```

@@ -1,0 +1,72 @@
+---
+title: "UFA Clustering"
+output: html_document
+date: "2025-06-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library(tidyverse)
+theme_set(theme_light())
+library(dslabs)
+library(ggrepel)
+```
+
+```{r}
+#K-Means Clustering by XY Diff and Throw Angle
+avg_ufa_throws <- ufa_throws |>
+  mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
+  filter(!throw_team %in% c("allstars1", "allstars2")) |>
+  group_by(throw_team) |>
+  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle))
+
+init_kmeans <- avg_ufa_throws |> 
+  select(-throw_team) |> 
+  kmeans(algorithm = "Lloyd", centers = 3, nstart = 1)
+
+avg_ufa_throws |>
+  mutate(
+    avg_throw_clusters = as.factor(init_kmeans$cluster)
+  ) |>
+  ggplot(aes(x = avg_x_diff, y = avg_y_diff,color = avg_throw_clusters)) +
+  geom_point(size = 2) + 
+  labs(title = "Cluster Plot of Team Avg Throw Locations",x = "Avg X Distance", y = "Avg Y Distance") +
+  ggthemes::scale_color_colorblind() +
+  geom_text_repel(aes(label = throw_team))
+  theme(legend.position = "bottom") 
+
+  
+```
+
+
+
+
+
+
+
+
+
+
