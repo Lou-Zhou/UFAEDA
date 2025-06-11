@@ -1,5 +1,5 @@
 ---
-title: "Throw Analysis in the Ultimate Frisbee Association (UFA)"
+title: "Examining Throwing Tendencies Throughout the Ultimate Frisbee League(UFA)"
 editor: visual
 author: Isabella Ferrandiz, Tai Fowler, Lou Zhou
 format:
@@ -12,15 +12,16 @@ format:
     footer: Project 2 - Isabella Ferrandiz, Tai Fowler, Lou Zhou
 server: shiny
 ---
-
 ```{r imports}
 #| context: setup
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(ggplot2)
 library(RColorBrewer)
+library(dslabs)
+library(ggrepel)
 ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/ufa_throws.csv")
-drawEndLocs <- function(successful = "Both", year = "Keep All", distanceBounds = c(0, 100), showContour = TRUE, showPoints = FALSE){
+drawEndLocs <- function(successful = "Both", player = "Keep All", distanceBounds = c(0, 100), showContour = TRUE, showPoints = FALSE){
 plot_ufa_throws <- ufa_throws
 title = "End Locations of Passes in UFA League"
 if(successful == "True"){
@@ -30,18 +31,15 @@ if(successful == "False"){
   title = paste(title, "| Failed Passes")
 }
 if(player != "Keep All"){
-  title = paste(title, "| Year", year)
+  title = paste(title, "| Player", player)
 }
 plot_ufa_throws <- ufa_throws |> 
-  dplyr::mutate(
-    year = as.numeric(substr(gameID, start = 1, stop = 4))
-  ) |>
   dplyr::filter(
     (successful != "True" | turnover == 0),
     (successful != "False" | turnover == 1),
-    (year == "Keep All" | year == year),
+    (player == "Keep All" | thrower == player),
     (thrower_y < (100 - distanceBounds[1]) & thrower_y > (100 -distanceBounds[2]))
-  ) 
+  )
 plot <- ggplot() + theme_classic() + 
   coord_fixed(ratio = field_width / (field_height + 40)) +
   labs(title = title,
@@ -114,11 +112,9 @@ brick_points = data.frame(
 ```
 
 ## Data Overview {.smaller}
-
-::::: columns
+::: columns
 ::: {.column width="50%"}
 <br><br>
-
 ```{r, fig.width=8, fig.height=6}
 ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4) |> dplyr::slice_tail(n = 10) |>
   ggplot() + theme_classic() + 
@@ -130,33 +126,27 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
   geom_segment(aes(x = thrower_x, y = thrower_y, xend = receiver_x, yend = receiver_y),  arrow = arrow(type="closed", length=unit(0.5,"mm"))
   ) + geom_segment(data = segment_data, aes(x = x, y = y, xend = xend, yend = yend))
 ```
-:::
 
+:::
 ::: {.column width="50%"}
-<br>
+<br><br>
 
 <!-- - Ultimate Frisbee - similar to American(Gridiron) Football -->
-
 <!--   - Scoring by passing disc to teammate in opponent's end zone -->
-
 <!--   - Cannot move while holding disc -->
-
 <!--   - Turnovers from interceptions, incompletions, and out of bound passes -->
-
 <!-- -  ultimate background(should keep?)-->
-
--   Throw Data originating from the 2021-2024 seasons of the Ultimate Frisbee Association(UFA)
-    -   Physical Throw Data
-        -   Start and End locations, success status, throw distance and angle
-    -   Thrower and Recipient Data
-        -   Player IDs, Team IDs,
-    -   Game State
-        -   Score, Time Left, Quarter, Possession Number
+- Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
+  - Per Throw Basis
+  - Physical Throw Data
+    - Start and End locations, success status, throw distance and angle
+  - Thrower and Recipient Data
+    - Player IDs, Team IDs, 
+  - Game State
+    - Score, Time Left, Quarter, Possession Number
 :::
-:::::
-
-## End Location Analysis
-
+:::
+## Throwing Tendencies between Players
 ::: {.center style="font-size:40%;"}
 ```{r}
 fluidPage(
@@ -179,16 +169,15 @@ fluidPage(
 )
 ```
 :::
-
 ```{r}
 #| context: server
 output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$distBounds, input$showContour, input$showPoints))
     output$text <- renderText(getThrwerData(input$successPasses, input$thrower, input$distBounds))
 ```
 
-## Throw Distance Analysis {.smaller}
+## Analyzing Change of Throwing Strategy Dependent on Game State {.smaller}
 
-::::: columns
+::: columns
 ::: {.column width="70%"}
 ```{r, fig.width=8, fig.height=6}
 ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
@@ -197,16 +186,37 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
   xlab("Quarter") + ylab("Score Difference")
 ```
 :::
-
 ::: {.column width="30%"}
 <br><br><br>
 
--   Words
--   Words
--   Words
+- Words
+- Words
+- Words
 :::
-:::::
+:::
+## Team Archetypes Using K-Means Clustering {.smaller}
+```{r}
+avg_ufa_throws <- ufa_throws |>
+  mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
+  filter(!throw_team %in% c("allstars1", "allstars2")) |>
+  group_by(throw_team) |>
+  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle))
 
-## Developing Player Archetypes Using K-Means Clustering {.smaller}
+init_kmeans <- avg_ufa_throws |> 
+  select(-throw_team) |> 
+  kmeans(algorithm = "Lloyd", centers = 3, nstart = 1)
+
+avg_ufa_throws |>
+  mutate(
+    avg_throw_clusters = as.factor(init_kmeans$cluster)
+  ) |>
+  ggplot(aes(x = avg_x_diff, y = avg_y_diff,color = avg_throw_clusters)) +
+  geom_point(size = 2) + 
+  labs(title = "Cluster Plot of Team Avg Throw Locations",x = "Avg X Distance", y = "Avg Y Distance") +
+  ggthemes::scale_color_colorblind() +
+  geom_text_repel(aes(label = throw_team)) + theme(legend.position = "bottom") 
+
+```
+
 
 ## Concluding Thoughts {.smaller}
