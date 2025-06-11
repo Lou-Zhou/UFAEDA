@@ -17,8 +17,9 @@ server: shiny
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(ggplot2)
+library(RColorBrewer)
 ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/ufa_throws.csv")
-drawEndLocs <- function(successful = "Both", player = "Keep All", distanceBounds = c(0, 100), showContour = TRUE, showPoints = FALSE){
+drawEndLocs <- function(successful = "Both", year = "Keep All", distanceBounds = c(0, 100), showContour = TRUE, showPoints = FALSE){
 plot_ufa_throws <- ufa_throws
 title = "End Locations of Passes in UFA League"
 if(successful == "True"){
@@ -28,15 +29,18 @@ if(successful == "False"){
   title = paste(title, "| Failed Passes")
 }
 if(player != "Keep All"){
-  title = paste(title, "| Player", player)
+  title = paste(title, "| Year", year)
 }
 plot_ufa_throws <- ufa_throws |> 
+  dplyr::mutate(
+    year = as.numeric(substr(gameID, start = 1, stop = 4))
+  ) |>
   dplyr::filter(
     (successful != "True" | turnover == 0),
     (successful != "False" | turnover == 1),
-    (player == "Keep All" | thrower == player),
+    (year == "Keep All" | year == year),
     (thrower_y < (100 - distanceBounds[1]) & thrower_y > (100 -distanceBounds[2]))
-  )
+  ) 
 plot <- ggplot() + theme_classic() + 
   coord_fixed(ratio = field_width / (field_height + 40)) +
   labs(title = title,
@@ -107,8 +111,41 @@ brick_points = data.frame(
   y = c(20, 50)
 )
 ```
-## Data Overview
 
+## Data Overview {.smaller}
+::: columns
+::: {.column width="50%"}
+<br><br>
+```{r, fig.width=8, fig.height=6}
+ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4) |> dplyr::slice_tail(n = 10) |>
+  ggplot() + theme_classic() + 
+  coord_fixed(ratio = field_width / (field_height + 40)) +
+  labs(title = "Game 2021-06-04-MIN-MAD, Possession 4",
+       caption = "Data Courtesy Ultimate Frisbee Association(UFA)"
+  ) + xlab("X Position") + ylab("Y Position") +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  geom_segment(aes(x = thrower_x, y = thrower_y, xend = receiver_x, yend = receiver_y),  arrow = arrow(type="closed", length=unit(0.5,"mm"))
+  ) + geom_segment(data = segment_data, aes(x = x, y = y, xend = xend, yend = yend))
+```
+
+:::
+::: {.column width="50%"}
+<br>
+
+<!-- - Ultimate Frisbee - similar to American(Gridiron) Football -->
+<!--   - Scoring by passing disc to teammate in opponent's end zone -->
+<!--   - Cannot move while holding disc -->
+<!--   - Turnovers from interceptions, incompletions, and out of bound passes -->
+<!-- -  ultimate background(should keep?)-->
+- Throw Data originating from the 2021-2024 seasons of the Ultimate Frisbee Association(UFA)
+  - Physical Throw Data
+    - Start and End locations, success status, throw distance and angle
+  - Thrower and Recipient Data
+    - Player IDs, Team IDs, 
+  - Game State
+    - Score, Time Left, Quarter, Possession Number
+:::
+:::
 ## End Location Analysis
 ::: {.center style="font-size:40%;"}
 ```{r}
@@ -138,7 +175,26 @@ output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$
     output$text <- renderText(getThrwerData(input$successPasses, input$thrower, input$distBounds))
 ```
 
-## Test
-```{r}
-plot(1:100, 1:100)
+## Throw Distance Analysis {.smaller}
+
+::: columns
+::: {.column width="70%"}
+```{r, fig.width=8, fig.height=6}
+ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
+  geom_tile() + scale_fill_gradientn(colors = brewer.pal(9, "Blues"), name= "Throw Distance") + theme_classic() +
+  labs(title = "Comparing Throw Distance depending on Game State") + 
+  xlab("Quarter") + ylab("Score Difference")
 ```
+:::
+::: {.column width="30%"}
+<br><br><br>
+
+- Words
+- Words
+- Words
+:::
+:::
+## Developing Player Archetypes Using K-Means Clustering {.smaller}
+
+
+## Concluding Thoughts {.smaller}
