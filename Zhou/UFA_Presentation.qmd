@@ -209,4 +209,6 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
 
 ## Developing Player Archetypes Using K-Means Clustering {.smaller}
 
+
+
 ## Concluding Thoughts {.smaller}
