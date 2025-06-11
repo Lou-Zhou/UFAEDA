@@ -8,22 +8,139 @@ date: "2025-06-05"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+library(tidyverse)
+library(ggplot2)
+ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/ufa_throws.csv")
+```
+```{r}
+View(ufa_throws)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+```{r}
+#Split into Winning and losing home teams in Fourth Quarter
+f_q_l_t <- ufa_throws |>
+  filter(game_quarter == 4, score_diff >= -5 & score_diff <= -1, is_home_team == TRUE, throw_distance > 30)
+f_q_w_t <- ufa_throws |>
+  filter(game_quarter == 4, score_diff >= 0 & score_diff <= 5, is_home_team == TRUE, throw_distance > 30)
+# Plotting every Throw in the Fourth Quarter W/L
+f_q_l_t |>
+  ggplot(aes(x = times , y = throw_distance,
+             color = score_diff)) +
+  geom_point()+
+  labs(title = "Losing Team")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+f_q_w_t |>
+  ggplot(aes(x = times , y = throw_distance,
+             color = score_diff)) +
+  geom_point()+
+  labs(title = "Winning Team")
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+#Down 1 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == -1, is_home_team == TRUE) |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Down 1 Throw Distances")
+
+#Down 2 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == -2, is_home_team == TRUE) |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Down 2 Throw Distances")
+
+#Up 1 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == 1, is_home_team == TRUE) |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Up 1 Throw Distances")
+
+#Up 2 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == 2, is_home_team == TRUE) |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Up 2 Throw Distances")
+
+```
+
+```{r}
+#Glory 4Q Throws---------
+
+#Down 1 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == -1, is_home_team == TRUE, home_teamID == "glory") |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Down 1 Throw Distances")
+
+#Down 2 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == -2, is_home_team == TRUE, home_teamID == "glory") |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Down 2 Throw Distances")
+
+#Up 1 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == 1, is_home_team == TRUE, home_teamID == "glory") |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point()+
+  labs(title = "4Q Up 1 Throw Distances")
+
+#Up 2 4Q Throw Distance
+ufa_throws |>
+  filter(game_quarter == 4, score_diff == 2, is_home_team == TRUE, home_teamID == "glory") |>
+  ggplot(aes(x = times , y = throw_distance)) +
+  geom_point(color = "purple")+
+  labs(title = "4Q Up 2 Throw Distances")
+```
+
+```{r}
+#Summary Stats for Each Team (Competitive Games)
+ufa_throws |>
+  filter(game_quarter == 4, score_diff >= -5 & score_diff <= -1, home_teamID == "glory")
+  
+
+```
+
+
+
+
+```{r}
+## Investigating Completion Percentages in Final 5 Minutes
+## Filter to Final 5 Minutes
+last_five_minutes <- ufa_throws |>
+  filter(times < 300, is_home_team = TRUE)
+## Calculate Completion Percentage Per team In this situation
+comp_perc_five_mins <- last_five_minutes |>
+  group_by(home_teamID) |>
+  summarize(completion_percentage = 1 - mean(turnover)) |>
+  arrange(desc(completion_percentage))
+
+comp_perc_five_mins |>
+  ggplot(aes(x = home_teamID , y = completion_percentage, fill = home_teamID)) +
+  geom_col()+
+  labs(x = "Home Throwing Team" , y = "Completion Percentage" , title = "Completion Percentage by Team")
+
+top_five_comp_perc_five_mins <- last_five_minutes |>
+  group_by(home_teamID) |>
+  summarize(completion_percentage = 1 - mean(turnover)) |>
+  slice_head(n = 5)
+
+top_five_comp_perc_five_mins |>
+  ggplot(aes(x = home_teamID , y = completion_percentage, fill = home_teamID)) +
+  geom_col()+
+  labs(x = "Home Throwing Team" , y = "Completion Percentage" , title = "Completion Percentage by Team")
+
+```
+
+
+
+
