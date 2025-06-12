@@ -153,10 +153,21 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
     -   Game State
         -   Score, Time Left, Quarter, Possession Number
 :::
+<<<<<<< HEAD
 :::::
 
 ## Player Throwing Tendencies
 
+=======
+<<<<<<< HEAD
+:::::
+
+## Throwing Tendencies between Players
+
+=======
+## Player Throwing Tendencies
+>>>>>>> fe71431202c30e430a71bc8c41887b30c59bb539
+>>>>>>> 83e0a99ea097838b96336a09a8cdb886677eda12
 ::: {.center style="font-size:40%;"}
 ```{r}
 fluidPage(
@@ -222,6 +233,7 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
   xlab("Quarter") + ylab("Score Difference")
 ```
 :::
+<<<<<<< HEAD
 
 ::: {.column width="30%"}
 <br><br><br>
@@ -229,6 +241,19 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
 -   Words
 -   Words
 -   Words
+=======
+
+::: {.column width="30%"}
+<br>
+
+-   3 variables: Quarter, Score Difference and Throw Distance.
+
+-   Noticeable areas:
+
+    -   In the 4th and tied, throw distance is high
+
+    -   When team is up by 4 compared to down by 4
+>>>>>>> 83e0a99ea097838b96336a09a8cdb886677eda12
 :::
 :::::
 
@@ -257,4 +282,15 @@ avg_ufa_throws |>
 
 ```
 
+<<<<<<< HEAD
 ## Concluding Thoughts {.smaller}
+=======
+<<<<<<< HEAD
+## Concluding Thoughts {.smaller}
+=======
+
+## Concluding Thoughts {.smaller}
+
+
+>>>>>>> fe71431202c30e430a71bc8c41887b30c59bb539
+>>>>>>> 83e0a99ea097838b96336a09a8cdb886677eda12

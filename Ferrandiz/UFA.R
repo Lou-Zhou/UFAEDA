@@ -140,18 +140,11 @@ ggplot(wins, aes(x = reorder(teamID, -wins), y = wins, fill = year)) +
 
 
 #########       Horizontal plot, color by team. #############
-ggplot(wins, aes(x = wins, y = reorder(teamID, wins), fill = teamID)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~year, scales = "free_y") +  # One panel per year
-  labs(title = "Team Wins per Year", x = "Wins", y = "Team") +
-  theme_minimal() +
-  theme(legend.position = "none")
-
 
 #12 games in the regular season
 
 #install.packages("tidytext")
-#library(tidytext)
+library(tidytext)
 
 ggplot(team_wins, aes(x = wins, y = reorder_within(teamID, wins, year), fill = teamID)) +
   geom_col() +
@@ -167,21 +160,80 @@ ggplot(team_wins, aes(x = wins, y = reorder_within(teamID, wins, year), fill = t
 #havoc 2023
 #mechanix 2024
 #shred, nitro & summitt 2022
-wins<- ufa_throws %>%
-  distinct(gameID, home_teamID, away_teamID, home_team_win) %>%          # 1 row per game
-  mutate( winner = if_else(home_team_win == 1, home_teamID, away_teamID)       # Determine winner
-  ) %>% filter(!home_teamID %in% c("allstars1", "allstars2")) %>% 
-  count(winner, name = "wins") %>%                                  # Count wins per team per year
-  rename(teamID = winner)
+
+game_data_clean <- ufa_throws %>%
+  separate(gameID, into = c("year", "month", "day", "team1", "team2"), sep = "-") %>%
+  select(team1, team2, everything(), year, month, day)
 
 
 
-team_year_data <- game_data_clean %>%
-  mutate(year = format(date, "%Y"), winner = if_else(home_team_win == 1, home_teamID, away_teamID) %>%
-  pivot_longer(cols = c(team1, team2), names_to = "team_role", values_to = "team") %>%
-  filter(!team %in% c("allstar", "game")) %>%  # <- filter out unwanted team names
-  count(year, winner, name = "wins") %>% 
-  group_by(year, team) %>%
-  summarize(t_total_throw_distance = sum(throw_distance, na.rm = TRUE),
-            t_total_turnovers = sum(turnover, na.rm = TRUE),.groups = "drop"
-            )
+
+# performance by months
+
+
+months<- game_data_clean %>% 
+  filter(!home_teamID %in% c("allstars1", "allstars2")) %>% group_by(month) %>% 
+  summarize(total_turnover = sum(turnover),
+            total_throw_distance= sum(throw_distance))
+  
+
+
+ggplot(months, aes(x = month, y = total_throw_distance)) +
+  geom_bar(stat = "identity", position = "dodge", fill="lightblue") +
+  labs(title = "Team Throw Distance per Month", x = "Month", y = "Throw Distance") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+ggplot(months, aes(x = month, y = total_turnover)) +
+  geom_bar(stat = "identity", position = "dodge", fill="lightblue") +
+  labs(title = "Team Turnovers per Month", x = "Month", y = "Turnover") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+months_n <- months %>% mutate(
+  month_n = as.numeric(month)) %>% select(-month)        
+
+cor(months_n$month_n, months_n$total_turnover, method = 'pearson')
+
+
+
+
+
+
+# Install and load reshape2 package
+#install.packages("reshape2")
+# library(reshape2)
+# 
+# # creating correlation matrix
+# corr_mat <- round(cor(months_n),2)
+# 
+# # reduce the size of correlation matrix
+# melted_corr_mat <- melt(corr_mat)
+# # head(melted_corr_mat)
+# 
+# # plotting the correlation heatmap
+# library(ggplot2)
+# ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2,
+#                                    fill=value)) + 
+#   geom_tile()
+# 
+
+game_wins<- ufa_throws %>% 
+  distinct(gameID, home_teamID, away_teamID, home_team_win) %>%  
+  mutate(total_turnover = sum(turnover,na.rm = TRUE),
+         total_throw_distance= sum(throw_distance)) %>% select(everything())
+  
+game_wins <- ufa_throws %>%
+  group_by(gameID, home_teamID, away_teamID, home_team_win) %>%
+  summarize(
+    total_turnover = sum(turnover, na.rm = TRUE),
+    total_throw_distance = sum(throw_distance, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+#make data so that ti separates the teams and their total stats for each game
+
+cor(game_wins$home_team_win, game_wins$total_throw_distance)
