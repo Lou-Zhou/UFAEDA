@@ -153,10 +153,14 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
     -   Game State
         -   Score, Time Left, Quarter, Possession Number
 :::
+<<<<<<< HEAD
 :::::
 
 ## Throwing Tendencies between Players
 
+=======
+## Player Throwing Tendencies
+>>>>>>> fe71431202c30e430a71bc8c41887b30c59bb539
 ::: {.center style="font-size:40%;"}
 ```{r}
 fluidPage(
@@ -172,8 +176,10 @@ fluidPage(
         sliderInput("distBounds", "Start Distance from End Zone", value = c(0, 100), min = 0, max = 100)
       ),
       mainPanel(
-          column(12, plotOutput("plot", height = "500px")),
-          column(6, htmlOutput("text"))
+          fluidRow(
+        column(9, plotOutput("plot", height = "500px")),
+        column(3, htmlOutput("text"))
+      )
     )
   )
 )
@@ -184,6 +190,21 @@ fluidPage(
 #| context: server
 output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$distBounds, input$showContour, input$showPoints))
     output$text <- renderText(getThrwerData(input$successPasses, input$thrower, input$distBounds))
+    
+#Notes:
+    
+#Look at False, all
+## Most failures occur on attempts near or in the end zone, risky passes only occur on scoring attempts
+    
+# Look at all, all, 80 - 100 away
+## Deep throws are very rare, most prefer to throw a couple yards in front for a smaller gain rather than a risky attempt farther down the field
+
+#Look at all, all, move in 20 yrd increments on the away slide
+## Focus more on the middle until in scoring position, then attempts moreso to the flanks
+    
+# However, some players are more likely to go for deeper throws compared to others
+    # Deep Thrower: jfelton
+    # Conservative: jfroude
 ```
 
 ## Analyzing Change of Throwing Strategy Dependent on Game State {.smaller}
@@ -236,4 +257,11 @@ avg_ufa_throws |>
 
 ```
 
+<<<<<<< HEAD
 ## Concluding Thoughts {.smaller}
+=======
+
+## Concluding Thoughts {.smaller}
+
+
+>>>>>>> fe71431202c30e430a71bc8c41887b30c59bb539
