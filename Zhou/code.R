@@ -122,23 +122,4 @@ shinyApp(
   })
   
 #80, 53 1/3
-ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
-  geom_tile() + scale_fill_gradientn(colors = brewer.pal(9, "Blues"), name= "Throw Distance") + theme_classic() +
-  labs(title = "Comparing Throw Distance depending on Game State") + 
-  xlab("Quarter") + ylab("Score Difference")
 
-ufa_throws |> filter(goal == 1) |> group_by(gameID, possession_num) |>
-  summarise(poss_length = max(possession_throw)) |> filter(poss_length == 10)
-#gameID = 2021-06-04-MIN-MAD              
-#possession_num = 4
-#
-
-ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4) |> dplyr::slice_tail(n = 10) |>
-  ggplot() + theme_classic() + 
-  coord_fixed(ratio = field_width / (field_height + 40)) +
-  labs(title = "Game 2021-06-04-MIN-MAD, Possession 4",
-       caption = "Data Courtesy Ultimate Frisbee Association(UFA)"
-  ) + xlab("X Position") + ylab("Y Position") +
-  theme(plot.title = element_text(hjust = 0.5)) + 
-  geom_segment(aes(x = thrower_x, y = thrower_y, xend = receiver_x, yend = receiver_y),  arrow = arrow(type="closed", length=unit(0.5,"mm"))
-  ) + geom_segment(data = segment_data, aes(x = x, y = y, xend = xend, yend = yend))

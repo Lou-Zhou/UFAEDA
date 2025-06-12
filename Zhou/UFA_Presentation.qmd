@@ -192,6 +192,16 @@ output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$
     # Conservative: jfroude
 ```
 
+## Test
+
+::: {.column width="100%"}
+<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" 
+        width="100%" 
+        height="600px" 
+        style="border:none;">
+</iframe>
+:::
+
 ## Analyzing Change of Throwing Strategy Dependent on Game State {.smaller}
 
 ::: columns

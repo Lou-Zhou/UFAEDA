@@ -1,0 +1,13 @@
+name: ufa_endlocations
+title: ufa_endlocations
+username: louzhou
+account: louzhou
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14927862
+bundleId: 10447192
+url: https://louzhou.shinyapps.io/ufa_endlocations/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: UFA_Presentation.html|UFA_Presentation.qmd|UFA_Presentation_files
