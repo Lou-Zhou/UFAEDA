@@ -33,7 +33,11 @@ library(tidyverse)
 theme_set(theme_light())
 library(dslabs)
 library(ggrepel)
+library(factoextra)
 ```
+
+
+
 
 ```{r}
 #K-Means Clustering by XY Diff and Throw Angle
@@ -41,7 +45,7 @@ avg_ufa_throws <- ufa_throws |>
   mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
   filter(!throw_team %in% c("allstars1", "allstars2")) |>
   group_by(throw_team) |>
-  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle))
+  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle * 180/pi))
 
 init_kmeans <- avg_ufa_throws |> 
   select(-throw_team) |> 
@@ -51,16 +55,58 @@ avg_ufa_throws |>
   mutate(
     avg_throw_clusters = as.factor(init_kmeans$cluster)
   ) |>
-  ggplot(aes(x = avg_x_diff, y = avg_y_diff,color = avg_throw_clusters)) +
+  ggplot(aes(x = avg_x_diff, y = avg_y_diff, color = avg_throw_clusters)) +
   geom_point(size = 2) + 
-  labs(title = "Cluster Plot of Team Avg Throw Locations",x = "Avg X Distance", y = "Avg Y Distance") +
+  labs(title = "Cluster Plot of Team Avg Throw Locations", x = "Avg X Distance", y = "Avg Y Distance") +
   ggthemes::scale_color_colorblind() +
   geom_text_repel(aes(label = throw_team))
   theme(legend.position = "bottom") 
 
-  
 ```
 
+```{r}
+#PCA
+pca_avg_ufa_throws <- ufa_throws |>
+  mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
+  filter(!throw_team %in% c("allstars1", "allstars2")) |>
+  group_by(throw_team) |>
+  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle * 180/pi), avg_goals_per_throw = mean(goal), avg_to_per_throw = mean(turnover)) |>
+  mutate(
+    std_avg_x_diff = as.numeric(scale(avg_x_diff, center = TRUE, scale = TRUE)),
+    std_avg_y_diff = as.numeric(scale(avg_y_diff, center = TRUE, scale = TRUE)),
+    std_avg_throw_angle = as.numeric(scale(avg_throw_angle, center = TRUE, scale = TRUE)),
+    std_avg_goals_per_throw = as.numeric(scale(avg_goals_per_throw, center = TRUE, scale = TRUE)),
+    std_avg_to_per_throw = as.numeric(scale(avg_to_per_throw, center = TRUE, scale = TRUE))
+  )
+
+pca_avg_ufa_throws <- pca_avg_ufa_throws |>
+  select(std_avg_x_diff:std_avg_y_diff:std_avg_throw_angle:std_avg_goals_per_throw:std_avg_to_per_throw) |>
+  prcomp(center = TRUE , scale. = TRUE)
+summary(pca_avg_ufa_throws)
+
+ufa_pc_matrix <- pca_avg_ufa_throws$x
+head(ufa_pc_matrix)
+ufa_pca$rotation
+
+avg_ufa_throws_pca <- avg_ufa_throws |> 
+  mutate(pc1 = ufa_pc_matrix[,1], 
+         pc2 = ufa_pc_matrix[,2])
+avg_ufa_throws_pca |> 
+  ggplot(aes(x = pc1, y = pc2)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "PC 1", y = "PC 2")
+
+
+# fviz_pca_var(): projection of variables
+# fviz_pca_ind(): display observations with first two PCs
+pca_avg_ufa_throws |> 
+  fviz_pca_biplot(label = "var",
+                  alpha.ind = 0.25,
+                  alpha.var = 0.75,
+                  labelsize = 5,
+                  col.var = "navy",
+                  repel = TRUE)
+```
 
 
 
