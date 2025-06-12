@@ -12,6 +12,7 @@ format:
     footer: Project 2 - Isabella Ferrandiz, Tai Fowler, Lou Zhou
 server: shiny
 ---
+
 ```{r imports}
 #| context: setup
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
@@ -112,9 +113,11 @@ brick_points = data.frame(
 ```
 
 ## Data Overview {.smaller}
-::: columns
+
+::::: columns
 ::: {.column width="50%"}
 <br><br>
+
 ```{r, fig.width=8, fig.height=6}
 ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4) |> dplyr::slice_tail(n = 10) |>
   ggplot() + theme_classic() + 
@@ -126,27 +129,34 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
   geom_segment(aes(x = thrower_x, y = thrower_y, xend = receiver_x, yend = receiver_y),  arrow = arrow(type="closed", length=unit(0.5,"mm"))
   ) + geom_segment(data = segment_data, aes(x = x, y = y, xend = xend, yend = yend))
 ```
-
 :::
+
 ::: {.column width="50%"}
 <br><br>
 
 <!-- - Ultimate Frisbee - similar to American(Gridiron) Football -->
+
 <!--   - Scoring by passing disc to teammate in opponent's end zone -->
+
 <!--   - Cannot move while holding disc -->
+
 <!--   - Turnovers from interceptions, incompletions, and out of bound passes -->
+
 <!-- -  ultimate background(should keep?)-->
-- Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
-  - Per Throw Basis
-  - Physical Throw Data
-    - Start and End locations, success status, throw distance and angle
-  - Thrower and Recipient Data
-    - Player IDs, Team IDs, 
-  - Game State
-    - Score, Time Left, Quarter, Possession Number
+
+-   Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
+    -   Per Throw Basis
+    -   Physical Throw Data
+        -   Start and End locations, success status, throw distance and angle
+    -   Thrower and Recipient Data
+        -   Player IDs, Team IDs,
+    -   Game State
+        -   Score, Time Left, Quarter, Possession Number
 :::
-:::
+:::::
+
 ## Throwing Tendencies between Players
+
 ::: {.center style="font-size:40%;"}
 ```{r}
 fluidPage(
@@ -169,6 +179,7 @@ fluidPage(
 )
 ```
 :::
+
 ```{r}
 #| context: server
 output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$distBounds, input$showContour, input$showPoints))
@@ -177,7 +188,7 @@ output$plot <- renderPlot(drawEndLocs(input$successPasses, input$thrower, input$
 
 ## Analyzing Change of Throwing Strategy Dependent on Game State {.smaller}
 
-::: columns
+::::: columns
 ::: {.column width="70%"}
 ```{r, fig.width=8, fig.height=6}
 ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
@@ -186,15 +197,22 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
   xlab("Quarter") + ylab("Score Difference")
 ```
 :::
-::: {.column width="30%"}
-<br><br><br>
 
-- Words
-- Words
-- Words
+::: {.column width="30%"}
+<br>
+
+-   3 variables: Quarter, Score Difference and Throw Distance.
+
+-   Noticeable areas:
+
+    -   In the 4th and tied, throw distance is high
+
+    -   When team is up by 4 compared to down by 4
 :::
-:::
+:::::
+
 ## Team Archetypes Using K-Means Clustering {.smaller}
+
 ```{r}
 avg_ufa_throws <- ufa_throws |>
   mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
@@ -217,6 +235,5 @@ avg_ufa_throws |>
   geom_text_repel(aes(label = throw_team)) + theme(legend.position = "bottom") 
 
 ```
-
 
 ## Concluding Thoughts {.smaller}
