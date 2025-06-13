@@ -187,14 +187,7 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
 ::: {.column width="30%"}
 <br>
 
--   3 variables: Quarter, Score Difference and Throw Distance.
 
--   Noticeable areas:
-
-    -   In the 4th and tied, throw distance is high
-
-    -   When team is up by 4 compared to down by 4
-:::
 :::::
 ## Team Archetypes Using K-Means Clustering {.smaller}
 
