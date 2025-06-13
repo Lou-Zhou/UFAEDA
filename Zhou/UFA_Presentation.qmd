@@ -1,5 +1,5 @@
 ---
-title: "Examining Throwing Tendencies Throughout the Ultimate Frisbee League(UFA)"
+title: "Examining Throwing Tendencies Throughout the Ultimate Frisbee Association(UFA)"
 editor: visual
 author: Isabella Ferrandiz, Tai Fowler, Lou Zhou
 format:
@@ -21,10 +21,12 @@ library(ggplot2)
 library(RColorBrewer)
 library(dslabs)
 library(ggrepel)
+library(patchwork)
 ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/ufa_throws.csv")
-drawEndLocs <- function(successful = "Both", player = "Keep All", distanceBounds = c(0, 100), showContour = TRUE, showPoints = FALSE){
+drawEndLocs <- function(successful = "Both", player = "Keep All", scoring = FALSE, showContour = TRUE, showPoints = FALSE){
 plot_ufa_throws <- ufa_throws
 title = "End Locations of Passes in UFA League"
+title = ""
 if(successful == "True"){
   title = paste(title, "| Successful Passes")
 }
@@ -34,12 +36,21 @@ if(successful == "False"){
 if(player != "Keep All"){
   title = paste(title, "| Player", player)
 }
+if(!scoring){
+  title = paste("Scoring Attempts")
+}
+if(scoring){
+  title = paste("Non-Scoring Attempts")
+}
+
+
 plot_ufa_throws <- ufa_throws |> 
   dplyr::filter(
     (successful != "True" | turnover == 0),
     (successful != "False" | turnover == 1),
     (player == "Keep All" | thrower == player),
-    (thrower_y < (100 - distanceBounds[1]) & thrower_y > (100 -distanceBounds[2]))
+    (scoring | receiver_y >= 100),
+    (!scoring | receiver_y < 100)
   )
 plot <- ggplot() + theme_classic() + 
   coord_fixed(ratio = field_width / (field_height + 40)) +
@@ -154,13 +165,12 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
         -   Score, Time Left, Quarter, Possession Number
 :::
 :::::
-## Player Throwing Tendencies
+## Outside of Scoring Attempts, Players Tend to Throw Towards the Middle 
+```{r}
+drawEndLocs(successful = "Both", player = "Keep All", scoring = TRUE, showContour = TRUE, showPoints = FALSE) + drawEndLocs(successful = "Both", player = "Keep All", scoring = FALSE, showContour = TRUE, showPoints = FALSE)
+```
 
-::: {.column width="100%"}
-<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;">
 
-</iframe>
-:::
 
 ## Analyzing Change of Throwing Strategy Dependent on Game State {.smaller}
 
@@ -211,4 +221,10 @@ avg_ufa_throws |>
 
 ```
 
-## Concluding Thoughts {.smaller}
+## Discussion {.smaller}
+
+## Appendix - End Location Shiny App
+::: {.column width="100%"}
+<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;">
+</iframe>
+:::
