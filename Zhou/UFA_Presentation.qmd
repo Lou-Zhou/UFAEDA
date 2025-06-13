@@ -18,10 +18,12 @@ server: shiny
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(ggplot2)
+library(cluster)
 library(RColorBrewer)
 library(dslabs)
 library(ggrepel)
 library(patchwork)
+library(factoextra)
 ufa_throws <- read_csv("https://raw.githubusercontent.com/36-SURE/2025/main/data/ufa_throws.csv")
 drawEndLocs <- function(successful = "Both", player = "Keep All", scoring = FALSE, showContour = TRUE, showPoints = FALSE){
 plot_ufa_throws <- ufa_throws
@@ -125,6 +127,7 @@ brick_points = data.frame(
 
 ## Motivation
 
+::: fragment
 -   Ultimate Frisbee - similar to American(Gridiron) Football
 
     -   Scoring by passing disc to teammate in opponent's end zone
@@ -132,17 +135,20 @@ brick_points = data.frame(
     -   Cannot move while holding disc
 
     -   Turnovers from interceptions, incompletions, and out of bound passes
-  
+:::
+
+::: fragment
 -   Strong growth of a professional environment with dedicated leagues and athletes
 
-    - 
+    -   Advanced analytics still relatively novel
+    
+:::
 
 ## Data Overview {.smaller}
 
 ::::: columns
 ::: {.column width="50%"}
-
-```{r, fig.width=8, fig.height=6}
+```{r, fig.width=8, fig.height=8}
 ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4) |> dplyr::slice_tail(n = 10) |>
   ggplot() + theme_classic() + 
   coord_fixed(ratio = field_width / (field_height + 40)) +
@@ -156,7 +162,6 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
 :::
 
 ::: {.column width="50%"}
-
 -   Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
     -   Per Throw Basis
     -   Physical Throw Data
@@ -176,51 +181,106 @@ drawEndLocs(successful = "Both", player = "Keep All", scoring = TRUE, showContou
 
 ## Teams Attempt Farther Throws During the End of Close Games
 
-:::{.center}
+::: center
 ```{r, fig.width=8, fig.height=5,fig.align='center'}
 ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
   geom_tile() + scale_fill_gradientn(colors = brewer.pal(9, "Blues"), name= "Throw Distance") + theme_classic() + 
   xlab("Quarter") + ylab("Score Difference")
 ```
 :::
+
 ## Team Archetypes Using K-Means Clustering {.smaller}
 
+
 ```{r}
+#PCA
+pca_avg_ufa_throws <- ufa_throws |>
+  mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
+  filter(!throw_team %in% c("allstars1", "allstars2")) |>
+  group_by(throw_team) |>
+  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle * 180/pi), avg_goals_per_throw = mean(goal), avg_to_per_throw = mean(turnover)) |> 
+  mutate(
+    std_avg_x_diff = as.numeric(scale(avg_x_diff, center = TRUE, scale = TRUE)),
+    std_avg_y_diff = as.numeric(scale(avg_y_diff, center = TRUE, scale = TRUE)),
+    std_avg_throw_angle = as.numeric(scale(avg_throw_angle, center = TRUE, scale = TRUE)),
+    std_avg_goals_per_throw = as.numeric(scale(avg_goals_per_throw, center = TRUE, scale = TRUE)),
+    std_avg_to_per_throw = as.numeric(scale(avg_to_per_throw, center = TRUE, scale = TRUE))
+  )
+
+diff_pca_avg_ufa_throws <- pca_avg_ufa_throws |>
+  select(std_avg_x_diff:std_avg_y_diff:std_avg_throw_angle:std_avg_goals_per_throw:std_avg_to_per_throw) |>
+  prcomp(center = TRUE , scale. = TRUE)
+
+ufa_pc_matrix <- diff_pca_avg_ufa_throws$x
 avg_ufa_throws <- ufa_throws |>
   mutate(throw_team = ifelse(is_home_team, home_teamID, away_teamID)) |> 
   filter(!throw_team %in% c("allstars1", "allstars2")) |>
   group_by(throw_team) |>
-  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle))
+  summarize(avg_x_diff = mean(x_diff), avg_y_diff = mean(y_diff), avg_throw_angle = mean(throw_angle * 180/pi))
 
-init_kmeans <- avg_ufa_throws |> 
-  select(-throw_team) |> 
-  kmeans(algorithm = "Lloyd", centers = 3, nstart = 1)
+diff_avg_ufa_throws_pca <- avg_ufa_throws |> 
+  mutate(pc1 = ufa_pc_matrix[,1], 
+         pc2 = ufa_pc_matrix[,2])
 
-avg_ufa_throws |>
+#diff_avg_ufa_throws_pca |> 
+#  ggplot(aes(x = pc1, y = pc2)) +
+#  geom_point(alpha = 0.5) +
+#  labs(x = "PC 1", y = "PC 2")
+
+
+# fviz_pca_var(): projection of variables
+# fviz_pca_ind(): display observations with first two PCs
+rownames(diff_pca_avg_ufa_throws$rotation) <- c("Mean Throw Change in X", "Mean Throw Change in Y", "Mean Throw Angle", "Goals Per Throw", "Turnovers Per Throw")
+biplot <- diff_pca_avg_ufa_throws |> 
+  fviz_pca_biplot(label = "var",
+                  alpha.ind = 0.25,
+                  alpha.var = 0.75,
+                  labelsize = 5,
+                  col.var = "navy",
+                  repel = TRUE) 
+```
+
+```{r}
+#Gap Method to Find K-Clusters
+ufa_kmeans_gap_stat <- diff_avg_ufa_throws_pca |> 
+  select(pc1,pc2) |> 
+  clusGap(FUN = kmeans, nstart = 30, K.max = 10)
+#Clustering From PCA
+init_kmeans <- diff_avg_ufa_throws_pca |> 
+  select(pc1, pc2) |> 
+  kmeans(algorithm = "Lloyd", centers = 6, nstart = 1)
+
+pca_plot <- diff_avg_ufa_throws_pca |>
   mutate(
-    avg_throw_clusters = as.factor(init_kmeans$cluster)
+    diff_avg_throw_clusters = as.factor(init_kmeans$cluster)
   ) |>
-  ggplot(aes(x = avg_x_diff, y = avg_y_diff,color = avg_throw_clusters)) +
-  geom_point(size = 2) + 
-  labs(title = "Cluster Plot of Team Avg Throw Locations",x = "Avg X Distance", y = "Avg Y Distance") +
-  ggthemes::scale_color_colorblind() +
-  geom_text_repel(aes(label = throw_team)) + theme(legend.position = "bottom") 
-
+  ggplot(aes(x = pc1, y = pc2, color = diff_avg_throw_clusters)) +
+  geom_point(size = 2) + scale_color_brewer(palette = "Dark2") +
+  labs(title = "PCA Cluster Plot", x = "PC1", y = "PC2", colour = "Clusters") +
+  geom_text_repel(aes(label = throw_team)) + theme(legend.position = "bottom")  
+pca_plot + biplot
 ```
 
 ## Discussion {.smaller}
 
--   Conclusions
+::: fragment
+-   **Conclusions**
     -   Tendency to throw towards middle, except for scoring attempts
     -   Teams throw deeper during the ends of close matches
--   Limitations
+:::
+
+::: fragment
+-   **Limitations**
     -   Uncertainty of end locations around failed passes
     -   Inconsistent rules across leagues - difficult to interpret across the sport
--   Future Work
+:::
+
+::: fragment
+-   **Future Work**
     -   Examining throwing tendencies per player
     -   Determining changes in tendences across years
-
-## Appendix - End Location Shiny App 
-::: 
-<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;"> </iframe>
 :::
+
+## Appendix - End Location Shiny App
+
+<https://louzhou.shinyapps.io/ufa_endlocations/>
