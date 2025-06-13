@@ -64,6 +64,7 @@ avg_ufa_throws |>
 
 ```
 
+
 ```{r}
 #PCA
 pca_avg_ufa_throws <- ufa_throws |>
@@ -79,19 +80,19 @@ pca_avg_ufa_throws <- ufa_throws |>
     std_avg_to_per_throw = as.numeric(scale(avg_to_per_throw, center = TRUE, scale = TRUE))
   )
 
-pca_avg_ufa_throws <- pca_avg_ufa_throws |>
+diff_pca_avg_ufa_throws <- pca_avg_ufa_throws |>
   select(std_avg_x_diff:std_avg_y_diff:std_avg_throw_angle:std_avg_goals_per_throw:std_avg_to_per_throw) |>
   prcomp(center = TRUE , scale. = TRUE)
-summary(pca_avg_ufa_throws)
+summary(diff_pca_avg_ufa_throws)
 
-ufa_pc_matrix <- pca_avg_ufa_throws$x
+ufa_pc_matrix <- diff_pca_avg_ufa_throws$x
 head(ufa_pc_matrix)
 ufa_pca$rotation
 
-avg_ufa_throws_pca <- avg_ufa_throws |> 
+diff_avg_ufa_throws_pca <- avg_ufa_throws |> 
   mutate(pc1 = ufa_pc_matrix[,1], 
          pc2 = ufa_pc_matrix[,2])
-avg_ufa_throws_pca |> 
+diff_avg_ufa_throws_pca |> 
   ggplot(aes(x = pc1, y = pc2)) +
   geom_point(alpha = 0.5) +
   labs(x = "PC 1", y = "PC 2")
@@ -99,13 +100,44 @@ avg_ufa_throws_pca |>
 
 # fviz_pca_var(): projection of variables
 # fviz_pca_ind(): display observations with first two PCs
-pca_avg_ufa_throws |> 
+diff_pca_avg_ufa_throws |> 
   fviz_pca_biplot(label = "var",
                   alpha.ind = 0.25,
                   alpha.var = 0.75,
                   labelsize = 5,
                   col.var = "navy",
-                  repel = TRUE)
+                  repel = TRUE) 
+```
+
+
+```{r}
+#Gap Method to Find K-Clusters
+library(cluster)
+ufa_kmeans_gap_stat <- diff_avg_ufa_throws_pca |> 
+  select(pc1,pc2) |> 
+  clusGap(FUN = kmeans, nstart = 30, K.max = 10)
+# view the result 
+ufa_kmeans_gap_stat |> 
+  print(method = "firstmax")
+ufa_kmeans_gap_stat |> 
+  fviz_gap_stat(maxSE = list(method = "firstmax"))
+
+
+#Clustering From PCA
+init_kmeans <- diff_avg_ufa_throws_pca |> 
+  select(pc1, pc2) |> 
+  kmeans(algorithm = "Lloyd", centers = 6, nstart = 1)
+
+diff_avg_ufa_throws_pca |>
+  mutate(
+    diff_avg_throw_clusters = as.factor(init_kmeans$cluster)
+  ) |>
+  ggplot(aes(x = pc1, y = pc2, color = diff_avg_throw_clusters)) +
+  geom_point(size = 2) + 
+  labs(title = "PCA Cluster Plot", x = "PC1", y = "PC2", colour = "Clusters") +
+  ggthemes::scale_color_colorblind() +
+  geom_text_repel(aes(label = throw_team))
+  theme(legend.position = "bottom")  
 ```
 
 
