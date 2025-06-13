@@ -122,7 +122,17 @@ brick_points = data.frame(
   y = c(20, 50)
 )
 ```
+## Motivation
 
+- Ultimate Frisbee - similar to American(Gridiron) Football
+
+   - Scoring by passing disc to teammate in opponent's end zone
+
+   - Cannot move while holding disc 
+
+   - Turnovers from interceptions, incompletions, and out of bound passes
+  
+- 
 ## Data Overview {.smaller}
 
 ::::: columns
@@ -144,16 +154,6 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
 
 ::: {.column width="50%"}
 <br><br>
-
-<!-- - Ultimate Frisbee - similar to American(Gridiron) Football -->
-
-<!--   - Scoring by passing disc to teammate in opponent's end zone -->
-
-<!--   - Cannot move while holding disc -->
-
-<!--   - Turnovers from interceptions, incompletions, and out of bound passes -->
-
-<!-- -  ultimate background(should keep?)-->
 
 -   Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
     -   Per Throw Basis
@@ -222,7 +222,10 @@ avg_ufa_throws |>
 ```
 
 ## Discussion {.smaller}
-
+- Limitations
+  - Uncertainty of end locations around failed passes
+- Future Work
+  - Examining throwing tendences
 ## Appendix - End Location Shiny App
 ::: {.column width="100%"}
 <iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;">
