@@ -122,22 +122,25 @@ brick_points = data.frame(
   y = c(20, 50)
 )
 ```
+
 ## Motivation
 
-- Ultimate Frisbee - similar to American(Gridiron) Football
+-   Ultimate Frisbee - similar to American(Gridiron) Football
 
-   - Scoring by passing disc to teammate in opponent's end zone
+    -   Scoring by passing disc to teammate in opponent's end zone
 
-   - Cannot move while holding disc 
+    -   Cannot move while holding disc
 
-   - Turnovers from interceptions, incompletions, and out of bound passes
+    -   Turnovers from interceptions, incompletions, and out of bound passes
   
-- 
+-   Strong growth of a professional environment with dedicated leagues and athletes
+
+    - 
+
 ## Data Overview {.smaller}
 
 ::::: columns
 ::: {.column width="50%"}
-<br><br>
 
 ```{r, fig.width=8, fig.height=6}
 ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4) |> dplyr::slice_tail(n = 10) |>
@@ -153,7 +156,6 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
 :::
 
 ::: {.column width="50%"}
-<br><br>
 
 -   Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
     -   Per Throw Basis
@@ -165,30 +167,22 @@ ufa_throws |> dplyr::filter(gameID == "2021-06-04-MIN-MAD", possession_num == 4)
         -   Score, Time Left, Quarter, Possession Number
 :::
 :::::
-## Outside of Scoring Attempts, Players Tend to Throw Towards the Middle 
+
+## Outside of Scoring Attempts, Players Tend to Throw Towards the Middle
+
 ```{r}
 drawEndLocs(successful = "Both", player = "Keep All", scoring = TRUE, showContour = TRUE, showPoints = FALSE) + drawEndLocs(successful = "Both", player = "Keep All", scoring = FALSE, showContour = TRUE, showPoints = FALSE)
 ```
 
+## Teams Attempt Farther Throws During the End of Close Games
 
-
-## Analyzing Change of Throwing Strategy Dependent on Game State {.smaller}
-
-::::: columns
-::: {.column width="70%"}
-```{r, fig.width=8, fig.height=6}
+:::{.center}
+```{r, fig.width=8, fig.height=5,fig.align='center'}
 ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% ggplot(aes(x=game_quarter,y=score_diff, fill = throw_distance))+
-  geom_tile() + scale_fill_gradientn(colors = brewer.pal(9, "Blues"), name= "Throw Distance") + theme_classic() +
-  labs(title = "Comparing Throw Distance depending on Game State") + 
+  geom_tile() + scale_fill_gradientn(colors = brewer.pal(9, "Blues"), name= "Throw Distance") + theme_classic() + 
   xlab("Quarter") + ylab("Score Difference")
 ```
 :::
-
-::: {.column width="30%"}
-<br>
-
-
-:::::
 ## Team Archetypes Using K-Means Clustering {.smaller}
 
 ```{r}
@@ -215,12 +209,18 @@ avg_ufa_throws |>
 ```
 
 ## Discussion {.smaller}
-- Limitations
-  - Uncertainty of end locations around failed passes
-- Future Work
-  - Examining throwing tendences
-## Appendix - End Location Shiny App
-::: {.column width="100%"}
-<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;">
-</iframe>
+
+-   Conclusions
+    -   Tendency to throw towards middle, except for scoring attempts
+    -   Teams throw deeper during the ends of close matches
+-   Limitations
+    -   Uncertainty of end locations around failed passes
+    -   Inconsistent rules across leagues - difficult to interpret across the sport
+-   Future Work
+    -   Examining throwing tendencies per player
+    -   Determining changes in tendences across years
+
+## Appendix - End Location Shiny App 
+::: 
+<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;"> </iframe>
 :::

@@ -141,11 +141,25 @@ Isabella Ferrandiz, Tai Fowler, Lou Zhou
 </div>
 
 </section>
+<section id="motivation" class="slide level2">
+<h2>Motivation</h2>
+<ul>
+<li><p>Ultimate Frisbee - similar to American(Gridiron) Football</p>
+<ul>
+<li><p>Scoring by passing disc to teammate in opponent’s end zone</p></li>
+<li><p>Cannot move while holding disc</p></li>
+<li><p>Turnovers from interceptions, incompletions, and out of bound passes</p></li>
+</ul></li>
+<li><p>Strong growth of a professional environment with dedicated leagues and athletes</p>
+<ul>
+<li></li>
+</ul></li>
+</ul>
+</section>
 <section id="data-overview" class="slide level2 smaller">
 <h2>Data Overview</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<p><br><br></p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -156,12 +170,6 @@ Isabella Ferrandiz, Tai Fowler, Lou Zhou
 </div>
 </div>
 </div><div class="column" style="width:50%;">
-<p><br><br></p>
-<!-- - Ultimate Frisbee - similar to American(Gridiron) Football -->
-<!--   - Scoring by passing disc to teammate in opponent's end zone -->
-<!--   - Cannot move while holding disc -->
-<!--   - Turnovers from interceptions, incompletions, and out of bound passes -->
-<!-- -  ultimate background(should keep?)-->
 <ul>
 <li>Throwing Data Provided by the Ultimate Frisbee Association(UFA), 2021 - 2024
 <ul>
@@ -186,30 +194,19 @@ Isabella Ferrandiz, Tai Fowler, Lou Zhou
 <h2>Outside of Scoring Attempts, Players Tend to Throw Towards the Middle</h2>
 
 <img data-src="UFA_Presentation_files/figure-revealjs/unnamed-chunk-2-1.png" width="960" class="r-stretch"></section>
-<section id="analyzing-change-of-throwing-strategy-dependent-on-game-state" class="slide level2 smaller">
-<h2>Analyzing Change of Throwing Strategy Dependent on Game State</h2>
-<div class="columns">
-<div class="column" style="width:70%;">
-<div class="cell">
+<section id="teams-attempt-farther-throws-during-the-end-of-close-games" class="slide level2">
+<h2>Teams Attempt Farther Throws During the End of Close Games</h2>
+<div class="center">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div>
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="UFA_Presentation_files/figure-revealjs/unnamed-chunk-3-1.png" width="768"></p>
+<p><img data-src="UFA_Presentation_files/figure-revealjs/unnamed-chunk-3-1.png" class="quarto-figure quarto-figure-center" width="768"></p>
 </figure>
 </div>
 </div>
 </div>
-</div><div class="column" style="width:30%;">
-<p><br></p>
-<ul>
-<li><p>3 variables: Quarter, Score Difference and Throw Distance.</p></li>
-<li><p>Noticeable areas:</p>
-<ul>
-<li><p>In the 4th and tied, throw distance is high</p></li>
-<li><p>When team is up by 4 compared to down by 4</p></li>
-</ul></li>
-</ul>
-</div></div>
+</div>
 </section>
 <section id="team-archetypes-using-k-means-clustering" class="slide level2 smaller">
 <h2>Team Archetypes Using K-Means Clustering</h2>
@@ -217,13 +214,28 @@ Isabella Ferrandiz, Tai Fowler, Lou Zhou
 <img data-src="UFA_Presentation_files/figure-revealjs/unnamed-chunk-4-1.png" width="960" class="r-stretch"></section>
 <section id="discussion" class="slide level2 smaller">
 <h2>Discussion</h2>
+<ul>
+<li>Conclusions
+<ul>
+<li>Tendency to throw towards middle, except for scoring attempts</li>
+<li>Teams throw deeper during the ends of close matches</li>
+</ul></li>
+<li>Limitations
+<ul>
+<li>Uncertainty of end locations around failed passes</li>
+<li>Inconsistent rules across leagues - difficult to interpret across the sport</li>
+</ul></li>
+<li>Future Work
+<ul>
+<li>Examining throwing tendencies per player</li>
+<li>Determining changes in tendences across years</li>
+</ul></li>
+</ul>
 </section>
 <section id="appendix---end-location-shiny-app" class="slide level2">
 <h2>Appendix - End Location Shiny App</h2>
-<div class="column" style="width:100%;">
-<iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;">
-</iframe>
-</div><p>
+<p>::: <iframe src="https://louzhou.shinyapps.io/ufa_endlocations/" width="100%" height="600px" style="border:none;"> </iframe> :::</p>
+<p>
 <script type="application/shiny-prerendered" data-context="server-start">
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
