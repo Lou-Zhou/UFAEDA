@@ -8,7 +8,6 @@ format:
     chalkboard: 
       buttons: false
     preview-links: auto
-    css: styles.css
     footer: Project 2 - Isabella Ferrandiz, Tai Fowler, Lou Zhou
 server: shiny
 ---
