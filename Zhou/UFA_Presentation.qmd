@@ -4,9 +4,8 @@ editor: visual
 author: Isabella Ferrandiz, Tai Fowler, Lou Zhou
 format:
   revealjs: 
+    embed-resources: true
     slide-number: true
-    chalkboard: 
-      buttons: false
     preview-links: auto
     footer: Project 2 - Isabella Ferrandiz, Tai Fowler, Lou Zhou
 server: shiny
