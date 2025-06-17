@@ -187,7 +187,7 @@ ufa_throws %>% filter(score_diff%in% -4:4) %>% filter(game_quarter%in% 1:4) %>% 
 ```
 :::
 
-## Team Archetypes Using K-Means Clustering {.smaller}
+## Team Archetypes Using k-Means Clustering {.smaller}
 
 
 ```{r}
